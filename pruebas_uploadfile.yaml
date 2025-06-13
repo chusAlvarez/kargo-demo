@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-files
+  namespace: test
+data:
+  upload.php: |
+    <?php
+    $target_dir = "uploads/";
+    $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
+    $uploadOk = 1;
+    $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+    // Check if image file is a actual image or fake image
+    if(isset($_POST["submit"])) {
+      $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
+      if($check !== false) {
+        echo "File is an image - " . $check["mime"] . ".";
+        $uploadOk = 1;
+      } else {
+        echo "File is not an image.";
+        $uploadOk = 0;
+      }
+    }
+    ?>
+  index.html: |
+    <form action="upload.php" method="post" enctype="multipart/form-data">
+      <input type="file" name="myFile">
+      <input type="submit" value="upload">
+    </form>
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pruebaupload
+  namespace: test
+  labels:
+    app: pruebaupload
+spec:
+  containers:
+    - name: builder
+      image: chusalvarez/kargo-demo
+      imagePullPolicy: Always
+      volumeMounts:
+      - name: config-volume
+        mountPath: /usr/local/apache2/htdocs/
+  volumes:
+  - name: config-volume
+    configMap:
+      # Provide the name of the ConfigMap containing the files you want
+      # to add to the container
+      name: test-files
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pruebaupload
+  namespace: test
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: pruebaupload
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pruebaupload
+  namespace: test
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: pruebaupload.int.live.foam.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: pruebaupload
+            port:
+              number: 80
+        path: /
+        pathType: ImplementationSpecific
