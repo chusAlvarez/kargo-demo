@@ -38,7 +38,7 @@ metadata:
 spec:
   containers:
     - name: builder
-      image: chusalvarez/kargo-demo
+      image: http
       imagePullPolicy: Always
       volumeMounts:
       - name: config-volume
