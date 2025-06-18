@@ -38,7 +38,7 @@ metadata:
 spec:
   containers:
     - name: builder
-      image: http
+      image: httpd
       imagePullPolicy: Always
       volumeMounts:
       - name: config-volume
