@@ -75,7 +75,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: kargo-demo.int.live.foam.io
+  - host: kargo-demo-bad.int.live.foam.io
     http:
       paths:
       - backend:
